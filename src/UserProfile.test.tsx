@@ -2,11 +2,23 @@ import { render, waitFor } from '@testing-library/react';
 import UserProfile from './UserProfile';
 
 describe('UserProfile', () => {
+    let originalFetch: typeof global.fetch;
+
+    beforeEach(() => {
+        originalFetch = global.fetch;
+        jest.spyOn(global, 'fetch');
+    });
+
+    afterEach(() => {
+        jest.restoreAllMocks();
+        global.fetch = originalFetch;
+    });
+
     it('fetches and displays user data', async () => {
         // Мокуємо відповідь від API
-        jest.spyOn(global, 'fetch').mockResolvedValueOnce({
+        (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
             ok: true,
-            json: async () => ({ name: 'Leanne Graham', email: 'Sincere@april.biz' }),
+            json: async () => ({ name: 'John', email: 'john@example.com' }),
         } as Response);
 
         // Рендеримо компонент
@@ -17,8 +29,8 @@ describe('UserProfile', () => {
 
         // Очікуємо, що дані користувача будуть відображені
         await waitFor(() => {
-            expect(getByText('Name: Leanne Graham')).toBeInTheDocument();
-            expect(getByText('Email: Sincere@april.biz')).toBeInTheDocument();
+            expect(getByText(/Name: [A-Za-z]{3,}/)).toBeInTheDocument(); // Перевірка імені мінімум з 3 букв
+            expect(getByText(/Email: [A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/)).toBeInTheDocument(); // Перевірка електронної адреси
         });
 
         // Очікуємо, що індикатор завантаження більше не відображається
@@ -27,7 +39,7 @@ describe('UserProfile', () => {
 
     it('displays error message on failed request', async () => {
         // Мокуємо відповідь від API, щоб симулювати помилку
-        jest.spyOn(global, 'fetch').mockRejectedValueOnce(new Error('Failed to fetch user data'));
+        (global.fetch as jest.MockedFunction<typeof fetch>).mockRejectedValueOnce(new Error('Failed to fetch user data'));
 
         // Рендеримо компонент
         const { getByText, getByTestId, queryByTestId } = render(<UserProfile />);

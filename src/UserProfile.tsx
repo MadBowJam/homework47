@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 const UserProfile = () => {
     const [user, setUser] = useState<{ name: string; email: string } | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -14,8 +14,8 @@ const UserProfile = () => {
                 }
                 const userData = await response.json();
                 setUser({ name: userData.name, email: userData.email });
-            } catch (error: any) { // Оновлено
-                setError(error.message);
+            } catch (error) {
+                setError(error instanceof Error ? error.message : 'An unknown error occurred');
             } finally {
                 setLoading(false);
             }
